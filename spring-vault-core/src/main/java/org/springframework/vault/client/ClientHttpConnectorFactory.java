@@ -21,6 +21,8 @@ import java.security.KeyStore;
 
 import io.netty.channel.ChannelOption;
 import io.netty.handler.ssl.SslContextBuilder;
+import org.eclipse.jetty.client.http.HttpClientTransportOverHTTP;
+import org.eclipse.jetty.io.ClientConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import reactor.netty.http.client.HttpClient;
 
@@ -172,7 +174,7 @@ public class ClientHttpConnectorFactory {
 
 			if (hasSslConfiguration(sslConfiguration)) {
 
-				SslContextFactory sslContextFactory = new SslContextFactory();
+				SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
 
 				if (sslConfiguration.getKeyStoreConfiguration().isPresent()) {
 					KeyStore keyStore = ClientHttpRequestFactoryFactory
@@ -206,7 +208,10 @@ public class ClientHttpConnectorFactory {
 							.setIncludeCipherSuites(sslConfiguration.getEnabledCipherSuites().toArray(new String[0]));
 				}
 
-				return new org.eclipse.jetty.client.HttpClient(sslContextFactory);
+				ClientConnector connector = new ClientConnector();
+				connector.setSslContextFactory(sslContextFactory);
+
+				return new org.eclipse.jetty.client.HttpClient(new HttpClientTransportOverHTTP(connector));
 			}
 
 			return new org.eclipse.jetty.client.HttpClient();
